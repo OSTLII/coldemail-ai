@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cold Email AI Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Cold Email AI Generator</h1>
+        <p class="subtitle">Generate personalized cold emails powered by AI</p>
+        
+        <div class="form-container">
+            <div class="input-group">
+                <label for="recipientName">Recipient Name:</label>
+                <input type="text" id="recipientName" placeholder="e.g., John Smith">
+            </div>
+            
+            <div class="input-group">
+                <label for="company">Company:</label>
+                <input type="text" id="company" placeholder="e.g., Acme Corp">
+            </div>
+            
+            <div class="input-group">
+                <label for="industry">Industry:</label>
+                <input type="text" id="industry" placeholder="e.g., Technology, Healthcare">
+            </div>
+            
+            <div class="input-group">
+                <label for="purpose">Email Purpose:</label>
+                <textarea id="purpose" rows="3" placeholder="e.g., Introduce our SaaS product for team collaboration"></textarea>
+            </div>
+            
+            <div class="input-group">
+                <label for="tone">Tone:</label>
+                <select id="tone">
+                    <option value="professional">Professional</option>
+                    <option value="friendly">Friendly</option>
+                    <option value="casual">Casual</option>
+                    <option value="formal">Formal</option>
+                </select>
+            </div>
+            
+            <button id="generateBtn" onclick="generateEmail()">Generate Email</button>
+        </div>
+        
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Generating your email...</p>
+        </div>
+        
+        <div id="result" class="result" style="display: none;">
+            <h2>Generated Email</h2>
+            <div id="emailContent" class="email-content"></div>
+            <button onclick="copyEmail()">Copy to Clipboard</button>
+            <button onclick="resetForm()">Generate Another</button>
+        </div>
+    </div>
+    
+    <script>
+        async function generateEmail() {
+            const recipientName = document.getElementById('recipientName').value;
+            const company = document.getElementById('company').value;
+            const industry = document.getElementById('industry').value;
+            const purpose = document.getElementById('purpose').value;
+            const tone = document.getElementById('tone').value;
+            
+            if (!recipientName || !company || !purpose) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            document.querySelector('.form-container').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/generate-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        recipientName,
+                        company,
+                        industry,
+                        purpose,
+                        tone
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.email) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('result').style.display = 'block';
+                    document.getElementById('emailContent').innerHTML = data.email.replace(/\n/g, '<br>');
+                } else {
+                    throw new Error('No email generated');
+                }
+            } catch (error) {
+                alert('Error generating email: ' + error.message);
+                resetForm();
+            }
+        }
+        
+        function copyEmail() {
+            const emailText = document.getElementById('emailContent').innerText;
+            navigator.clipboard.writeText(emailText).then(() => {
+                alert('Email copied to clipboard!');
+            });
+        }
+        
+        function resetForm() {
+            document.querySelector('.form-container').style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('result').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
